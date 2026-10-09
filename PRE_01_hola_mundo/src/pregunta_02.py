@@ -1,6 +1,18 @@
-def pregunta_02():
+"""
+Escriba el codigo que ejecute la accion solicitada en cada pregunta.
+"""
 
-    return NotImplementedError
+# pylint: disable=import-outside-toplevel
+
+
+def pregunta_02():
+    """
+    Retorne el string "Hello cruel world!".
+
+
+    """
+
+    return "Hello cruel world!"
 
 
 if __name__ == "__main__":
