@@ -1,18 +1,30 @@
+"""
+Escriba el codigo que ejecute la accion solicitada en cada pregunta. Los
+datos requeridos se encuentran en los archivos `tbl0.tsv`, `tbl1.tsv` y 
+`tbl2.tsv`. En este laboratorio solo puede utilizar las funciones y 
+librerias de pandas para resolver las preguntas.
+"""
+
+import pandas as pd
+from functions import (
+    load_data
+)
+
 def pregunta_10():
     """
-    Usando `data/tbl0.tsv`, construya para cada categoría de la columna `c1`
-    un texto con todos sus valores de la columna `c2`, ordenados de menor a
-    mayor y separados por `:`. Retorne un DataFrame cuyo índice son las
-    categorías, en orden alfabético, con una única columna llamada `c2`.
+    Construya una tabla que contenga `c1` y una lista separada por ':' de los
+    valores de la columna `c2` para el archivo `tbl0.tsv`.
 
-    Ejemplo del formato de la respuesta:
-
-                           c2
-        c1
-        A     1:1:2:3:6:7:8:9
-        B       1:3:4:5:6:8:9
-        C           0:5:6:7:9
-        ...
+    Rta/
+                                 c2
+    c1
+    A               1:1:2:3:6:7:8:9
+    B                 1:3:4:5:6:8:9
+    C                     0:5:6:7:9
+    D                   1:2:3:5:5:7
+    E   1:1:2:3:3:4:5:5:5:6:7:8:8:9
     """
-
-    raise NotImplementedError
+    df = load_data(0)
+    df["c2"] = df["c2"].astype(str) 
+    result = df.groupby("c1")["c2"].agg(lambda x: ":".join(sorted(x)))
+    return result.to_frame() 

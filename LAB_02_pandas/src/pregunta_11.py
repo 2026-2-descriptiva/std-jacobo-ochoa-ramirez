@@ -1,18 +1,32 @@
+"""
+Escriba el codigo que ejecute la accion solicitada en cada pregunta. Los
+datos requeridos se encuentran en los archivos `tbl0.tsv`, `tbl1.tsv` y 
+`tbl2.tsv`. En este laboratorio solo puede utilizar las funciones y 
+librerias de pandas para resolver las preguntas.
+"""
+import pandas as pd
+from functions import (
+    load_data
+)
+
 def pregunta_11():
     """
-    En `data/tbl1.tsv`, cada valor de la columna `c0` aparece en varias
-    filas, una por cada letra de la columna `c4`. Construya un DataFrame con
-    una fila por cada valor de `c0`, en orden ascendente, y las columnas `c0`
-    y `c4`. En `c4`, escriba las letras de ese `c0` ordenadas alfabéticamente
-    y separadas por comas.
+    Construya una tabla que contenga `c0` y una lista separada por ',' de
+    los valores de la columna `c4` del archivo `tbl1.tsv`.
 
-    Ejemplo del formato de la respuesta:
-
-            c0       c4
-        0    0    b,f,g
-        1    1    a,c,f
-        2    2  a,c,e,f
-        ...
+    Rta/
+         c0       c4
+    0     0    b,f,g
+    1     1    a,c,f
+    2     2  a,c,e,f
+    3     3      a,b
+    ...
+    37   37  a,c,e,f
+    38   38      d,e
+    39   39    a,d,f
     """
+    df = load_data(1)
 
-    raise NotImplementedError
+    df_result = df.groupby("c0")["c4"].agg(lambda x: ",".join(sorted(x))).reset_index()
+
+    return df_result

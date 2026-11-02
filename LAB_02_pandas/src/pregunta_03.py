@@ -1,16 +1,29 @@
+"""
+Escriba el codigo que ejecute la accion solicitada en cada pregunta. Los
+datos requeridos se encuentran en los archivos `tbl0.tsv`, `tbl1.tsv` y 
+`tbl2.tsv`. En este laboratorio solo puede utilizar las funciones y 
+librerias de pandas para resolver las preguntas.
+"""
+import pandas as pd
+from functions import (
+    load_data
+)
+
+
 def pregunta_03():
     """
-    Usando `data/tbl0.tsv`, cuente cuántos registros hay para cada categoría
-    de la columna `c1`. Retorne una Serie de Pandas cuyo índice son las
-    categorías, en orden alfabético, y cuyos valores son las cantidades.
+    ¿Cuál es la cantidad de registros por cada letra de la columna `c1` del
+    archivo `tbl0.tsv`?
 
-    Ejemplo del formato de la respuesta:
+    Rta/
+    c1
+    A     8
+    B     7
+    C     5
+    D     6
+    E    14
+    Name: count, dtype: int64
 
-        c1
-        A     8
-        B     7
-        C     5
-        ...
     """
-
-    raise NotImplementedError
+    df = load_data(0)
+    return df.groupby("c1").size()
