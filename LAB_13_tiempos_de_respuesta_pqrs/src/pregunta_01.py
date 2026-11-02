@@ -1,4 +1,127 @@
 import pandas as pd
+import numpy as np
+from pathlib import Path
+
+
+def load_channel_data(activity_dir: Path, channel: str) -> pd.DataFrame:
+    data_path = activity_dir / "data" / f"historical_requests_{channel}.csv.gz"
+    requests = pd.read_csv(data_path, compression="gzip").drop_duplicates()
+    requests["channel"] = channel
+    requests["in_date"] = pd.to_datetime(requests["in_date"])
+    requests["out_date"] = pd.to_datetime(requests["out_date"])
+    return requests
+
+
+def combine_channel_data(activity_dir: Path) -> pd.DataFrame:
+    return pd.concat(
+        [
+            load_channel_data(activity_dir, "letter"),
+            load_channel_data(activity_dir, "web"),
+        ],
+        ignore_index=True,
+    )
+
+
+def calculate_response_times(requests: pd.DataFrame) -> pd.DataFrame:
+    requests = requests.copy()
+    answered = requests["out_date"].notna()
+    requests["calendar_days"] = (
+        requests["out_date"] - requests["in_date"]
+    ).dt.days
+    requests["business_days"] = pd.NA
+    requests.loc[answered, "business_days"] = np.busday_count(
+        (requests.loc[answered, "in_date"] + pd.Timedelta(days=1))
+        .values.astype("datetime64[D]"),
+        (requests.loc[answered, "out_date"] + pd.Timedelta(days=1))
+        .values.astype("datetime64[D]"),
+    )
+    requests["business_days"] = pd.to_numeric(
+        requests["business_days"], errors="coerce"
+    )
+    requests["answered"] = answered
+    requests["on_time"] = answered & (requests["business_days"] <= 15)
+    return requests
+
+
+def build_channel_summary(requests: pd.DataFrame) -> pd.DataFrame:
+    summary = (
+        requests.groupby("channel")
+        .agg(
+            requests=("channel", "size"),
+            answered=("answered", "sum"),
+            pending=("answered", lambda values: (~values).sum()),
+            median_business_days=("business_days", "median"),
+            on_time_rate=("on_time", "mean"),
+        )
+        .reset_index()
+        .sort_values("channel")
+    )
+    return summary[
+        [
+            "channel",
+            "requests",
+            "answered",
+            "pending",
+            "median_business_days",
+            "on_time_rate",
+        ]
+    ]
+
+
+def build_yearly_summary(requests: pd.DataFrame) -> pd.DataFrame:
+    requests["year"] = requests["in_date"].dt.year
+    summary = (
+        requests.groupby(["year", "channel"])
+        .agg(
+            requests=("channel", "size"),
+            pending=("answered", lambda values: (~values).sum()),
+            on_time_rate=("on_time", "mean"),
+        )
+        .reset_index()
+        .sort_values(["year", "channel"])
+    )
+    return summary[["year", "channel", "requests", "pending", "on_time_rate"]]
+
+
+def build_entry_day_summary(requests: pd.DataFrame) -> pd.DataFrame:
+    day_order = [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+    ]
+    requests = requests.copy()
+    requests["day_name"] = pd.Categorical(
+        requests["day_name"], categories=day_order, ordered=True
+    )
+    summary = (
+        requests.groupby("day_name", observed=False)
+        .agg(
+            requests=("day_name", "size"),
+            median_calendar_days=("calendar_days", "median"),
+            median_business_days=("business_days", "median"),
+        )
+        .reset_index()
+    )
+    summary["day_name"] = summary["day_name"].astype(str)
+    return summary[
+        ["day_name", "requests", "median_calendar_days", "median_business_days"]
+    ]
+
+
+def save_summaries(
+    channel_summary: pd.DataFrame,
+    yearly_summary: pd.DataFrame,
+    entry_day_summary: pd.DataFrame,
+    output_dir: Path,
+) -> None:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    channel_summary.to_csv(output_dir / "channel_summary.csv", index=False)
+    yearly_summary.to_csv(output_dir / "yearly_summary.csv", index=False)
+    entry_day_summary.to_csv(output_dir / "entry_day_summary.csv", index=False)
 
 
 def pregunta_01() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -61,4 +184,15 @@ def pregunta_01() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         ...
     """
 
-    raise NotImplementedError
+    activity_dir = Path(__file__).resolve().parents[1]
+    requests = calculate_response_times(combine_channel_data(activity_dir))
+    channel_summary = build_channel_summary(requests)
+    yearly_summary = build_yearly_summary(requests)
+    entry_day_summary = build_entry_day_summary(requests)
+    save_summaries(
+        channel_summary,
+        yearly_summary,
+        entry_day_summary,
+        activity_dir / "submission",
+    )
+    return channel_summary, yearly_summary, entry_day_summary
