@@ -21,3 +21,4 @@
 --
 --  Escriba su consulta debajo de esta línea.
 --
+select sum(c12) from tbl1;

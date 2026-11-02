@@ -24,3 +24,5 @@
 --
 --  Escriba su consulta debajo de esta línea.
 --
+
+select K0, c16 from tbl1 where substring(K0, 1,1) = substring(c16, 1,1);

@@ -1,4 +1,5 @@
 import pandas as pd
+from pathlib import Path
 
 
 def pregunta_01() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -50,4 +51,97 @@ def pregunta_01() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         ...
     """
 
-    raise NotImplementedError
+    data_path = (
+        Path(__file__).resolve().parents[1]
+        / "data"
+        / "superstore_orders.csv.gz"
+    )
+    df = pd.read_csv(
+        data_path,
+        sep=";",
+        decimal=",",
+        compression="gzip",
+    )
+
+    df["discount_band"] = pd.cut(
+        df["Discount"],
+        bins=[-float("inf"), 0, 0.05, 0.10, float("inf")],
+        labels=["0%", "1%-5%", "6%-10%", "más de 10%"],
+        right=True,
+        include_lowest=True,
+    )
+
+    def summarize(group):
+        losses = group["Profit"] < 0
+        sales = group["Sales"].sum()
+        return {
+            "lines": int(len(group)),
+            "sales": sales,
+            "profit": group["Profit"].sum(),
+            "profit_margin": group["Profit"].sum() / sales,
+            "loss_line_rate": losses.mean(),
+            "lost_profit": -group.loc[losses, "Profit"].sum(),
+        }
+
+    overall = summarize(df)
+    profitability_summary = pd.DataFrame(
+        [
+            {
+                "lines": overall["lines"],
+                "orders": int(df["Order ID"].nunique()),
+                "sales": overall["sales"],
+                "profit": overall["profit"],
+                "profit_margin": overall["profit_margin"],
+                "loss_lines": int((df["Profit"] < 0).sum()),
+                "loss_line_rate": overall["loss_line_rate"],
+                "lost_profit": overall["lost_profit"],
+            }
+        ]
+    )
+
+    discount_summary = pd.DataFrame(
+        [
+            {"discount_band": band, **summarize(df[df["discount_band"] == band])}
+            for band in ["0%", "1%-5%", "6%-10%", "más de 10%"]
+        ]
+    )[
+        [
+            "discount_band",
+            "lines",
+            "sales",
+            "profit",
+            "profit_margin",
+            "loss_line_rate",
+            "lost_profit",
+        ]
+    ]
+
+    segment_summary = (
+        df.groupby(["Customer Segment", "Product Category"], sort=False)
+        .apply(lambda group: pd.Series(summarize(group)))
+        .reset_index()
+    )
+    segment_summary = segment_summary[segment_summary["lines"] >= 100]
+    priority_segments = segment_summary.sort_values(
+        "lost_profit", ascending=False
+    ).head(5)[
+        [
+            "Customer Segment",
+            "Product Category",
+            "lines",
+            "sales",
+            "profit",
+            "profit_margin",
+            "lost_profit",
+        ]
+    ].reset_index(drop=True)
+
+    output_dir = Path(__file__).resolve().parents[1] / "submission"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    profitability_summary.to_csv(
+        output_dir / "profitability_summary.csv", index=False
+    )
+    discount_summary.to_csv(output_dir / "discount_summary.csv", index=False)
+    priority_segments.to_csv(output_dir / "priority_segments.csv", index=False)
+
+    return profitability_summary, discount_summary, priority_segments

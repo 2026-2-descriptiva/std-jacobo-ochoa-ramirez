@@ -26,3 +26,6 @@
 --
 --  Escriba su consulta debajo de esta línea.
 --
+
+
+select K0, avg(c12) from tbl1 where c13 > 400 group by K0;

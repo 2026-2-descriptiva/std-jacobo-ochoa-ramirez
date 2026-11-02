@@ -25,3 +25,9 @@
 --
 --  Escriba su consulta debajo de esta línea.
 --
+
+
+
+
+
+select strftime('%Y', c23) as YEAR, avg(c21) from tbl2 group by strftime('%Y', c23);

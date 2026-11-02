@@ -21,3 +21,5 @@
 --
 --  Escriba su consulta debajo de esta línea.
 --
+
+select * from tbl2 where c21 = (select min(c21) from tbl2);
