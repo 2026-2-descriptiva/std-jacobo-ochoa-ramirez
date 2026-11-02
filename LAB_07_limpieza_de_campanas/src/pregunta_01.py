@@ -1,4 +1,78 @@
 import pandas as pd
+from pathlib import Path
+
+# pylint: disable=import-outside-toplevel
+import pandas as pd
+import zipfile
+
+# def load_data():
+#     data_path = Path(__file__).resolve().parents[1] / "data" / "solicitudes_de_credito.csv.gz"
+#     return pd.read_csv(data_path, sep=";", index_col=0, compression="gzip")
+
+
+
+def readfiles():
+    files_dfs = []
+
+    for i in range(10):
+        # zip_path = f"files/input/bank-marketing-campaing-{i}.csv.zip"
+        zip_path = Path(__file__).resolve().parents[1] / "data" / f"bank-marketing-campaing-{i}.csv.gz"      
+        file_df = pd.read_csv(zip_path, index_col=0, compression="gzip")
+        files_dfs.append(file_df)
+    return pd.concat(files_dfs)
+
+
+def define_client_df(df):
+    client_df = df[[
+        "client_id",
+        "age",
+        "job",
+        "marital",
+        "education",
+        "credit_default",
+        "mortgage"
+        ]].copy()
+
+    client_df["job"] = client_df["job"].str.replace(".", "").str.replace("-", "_")
+    client_df["education"] = client_df["education"].str.replace(".", "_").replace({"unknown": pd.NA})
+    
+    client_df["credit_default"] = client_df["credit_default"].map(lambda x: 1 if x == "yes" else 0)
+    client_df["mortgage"] = client_df["mortgage"].map(lambda x: 1 if x == "yes" else 0)
+
+    return client_df
+
+def define_campaign_df(df):
+    campaign_df = df[[
+        "client_id",        
+        "number_contacts",        
+        "contact_duration",        
+        "previous_campaign_contacts",        
+        "previous_outcome",
+        "campaign_outcome"
+    ]].copy()
+
+    campaign_df["previous_outcome"] = campaign_df["previous_outcome"].map(lambda x: 1 if x == "success" else 0)    
+    campaign_df["campaign_outcome"] = campaign_df["campaign_outcome"].map(lambda x: 1 if x == "yes" else 0)    
+
+    month_mapping = {
+    "jan": "01", "feb": "02", "mar": "03", "apr": "04", "may": "05", "jun": "06",
+    "jul": "07", "aug": "08", "sep": "09", "oct": "10", "nov": "11", "dec": "12"
+    }
+
+    df["month"] = df["month"].map(month_mapping)
+
+    campaign_df["last_contact_date"] = "2022-" + df["month"] + "-" + df["day"].astype(str).str.zfill(2)
+
+    return campaign_df
+
+def define_economics_df(df):
+    economics_df = df[[
+    "client_id",
+    "cons_price_idx",
+    "euribor_three_months"
+    ]].copy()
+
+    return economics_df
 
 
 def clean_campaign_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -43,4 +117,11 @@ def clean_campaign_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         ...
     """
 
-    raise NotImplementedError
+    df = readfiles()
+    client_df = define_client_df(df)
+    campaign_df = define_campaign_df(df)
+    economics_df = define_economics_df(df)
+
+    client_df.to_csv("submission/client.csv", index = False)
+    campaign_df.to_csv("submission/campaign.csv", index = False)
+    economics_df.to_csv("submission/economics.csv", index = False)
