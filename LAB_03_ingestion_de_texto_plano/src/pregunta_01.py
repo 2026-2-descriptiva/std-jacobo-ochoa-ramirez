@@ -88,7 +88,7 @@ def pregunta_01():
 
 	"""
 
-	with open("data\clusters_report.txt") as file:
+	with open("data/clusters_report.txt") as file:
 		lines = file.readlines()
 
 	filtered_lines = [line.strip() for line in lines if "---" not in line]
