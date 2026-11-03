@@ -1,3 +1,7 @@
+
+from functions import load_data, extract_multiple_columns, column_mapper_2, max_min_reducer, shuffle_and_sort
+
+
 def pregunta_05():
     """
     Para cada letra de la primera columna (`letter`), encuentre el valor
@@ -9,4 +13,9 @@ def pregunta_05():
         [("A", 9, 2), ("B", 9, 1), ...]
     """
 
-    raise NotImplementedError
+    letters, values = extract_multiple_columns((0, 1), load_data())
+    pairs = column_mapper_2(letters, values)
+    result = max_min_reducer(pairs)
+    return shuffle_and_sort(result)
+
+print(pregunta_05())

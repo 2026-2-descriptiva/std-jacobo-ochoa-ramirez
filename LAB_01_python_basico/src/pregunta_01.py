@@ -1,3 +1,5 @@
+from functions import load_data
+
 def pregunta_01():
     """
     Calcule la suma de los valores de la segunda columna (`value`) del
@@ -7,5 +9,13 @@ def pregunta_01():
 
         214
     """
+    data = load_data()
 
-    raise NotImplementedError
+    colSum = 0
+    for row in data:
+        colSum += int(row[1])
+
+    return colSum
+
+
+print(pregunta_01())

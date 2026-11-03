@@ -1,3 +1,14 @@
+
+
+from functions import (
+    extract_column,
+    load_data,
+    max_min_reducer,
+    parse_column,
+    parse_to_one_column,
+)
+
+
 def pregunta_06():
     """
     La quinta columna (`metrics`) contiene pares `clave:valor` separados por
@@ -13,4 +24,16 @@ def pregunta_06():
         [("aaa", 1, 9), ("bbb", 1, 9), ...]
     """
 
-    raise NotImplementedError
+    data = load_data()
+    metrics = extract_column(4, data)
+    metric_pairs = parse_to_one_column(parse_column(metrics, ","))
+
+    key_values = []
+    for pair in metric_pairs:
+        key, value = pair.split(":", 1)
+        key_values.append((key, int(value)))
+
+    result = max_min_reducer(key_values, reversed=True)
+    return sorted(result, key=lambda item: item[0])
+
+print(pregunta_06())
