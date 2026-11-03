@@ -1,4 +1,4 @@
-from functions import load_data
+from functions2 import load_data
 
 def pregunta_01():
     """

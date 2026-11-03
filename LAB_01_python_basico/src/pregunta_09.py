@@ -3,7 +3,7 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from functions import (
+from functions2 import (
     load_data,
     extract_column,
     column_mapper_1,

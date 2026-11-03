@@ -1,5 +1,5 @@
 
-from functions import load_data, extract_multiple_columns, column_mapper_2, max_min_reducer, shuffle_and_sort
+from functions2 import load_data, extract_multiple_columns, column_mapper_2, max_min_reducer, shuffle_and_sort
 
 
 def pregunta_05():

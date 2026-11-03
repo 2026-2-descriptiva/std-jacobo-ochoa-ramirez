@@ -1,5 +1,5 @@
 
-from functions import column_mapper_1, extract_column, load_data, reducer, shuffle_and_sort
+from functions2 import column_mapper_1, extract_column, load_data, reducer, shuffle_and_sort
 
 
 def pregunta_04():

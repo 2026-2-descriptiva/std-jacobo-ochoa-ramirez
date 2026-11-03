@@ -3,7 +3,7 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from functions import (
+from functions2 import (
     load_data,
     column_mapper_3,
     shuffle_and_sort,
